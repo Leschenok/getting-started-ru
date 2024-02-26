@@ -1,29 +1,30 @@
 
-Now that we've built an image, let's share it! To share Docker images, you have to use a Docker
-registry. The default registry is Docker Hub and is where all of the images we've used have come from.
+Теперь, когда мы создали образ, давайте поделимся им! Чтобы поделиться образами Docker, 
+вам необходимо использовать реестр Docker. Реестр по умолчанию - Docker Hub, откуда были взяты все используемые нами образы. 
 
-## Create a Repo
+## Создать репозиторий
 
-To push an image, we first need to create a repo on Docker Hub.
+Чтобы отправить образ, нам сначала нужно создать репозиторий в Docker Hub.
 
-1. Go to [Docker Hub](https://hub.docker.com) and log in if you need to.
+1. Перейдите в [Docker Hub](https://hub.docker.com) и при необходимости войдите в систему.
 
-1. Click the **Create Repository** button.
+1. Нажмите кнопку **Create Repository**.
 
-1. For the repo name, use `getting-started`. Make sure the Visibility is `Public`.
+1. В качестве имени репозитория используйте `getting-started`. Убедитесь, что видимость установлена на `Public`.
 
-1. Click the **Create** button!
+1. Нажмите кнопку **Create**!
 
-If you look on the right-side of the page, you'll see a section named **Docker commands**. This gives
-an example command that you will need to run to push to this repo.
+Если вы посмотрите на правую часть страницы, вы увидите раздел с названием **Docker commands**. 
+Это пример команды, которую вам нужно будет запустить, чтобы отправить (`push`) в этот репозиторий.
 
 ![Docker command with push example](push-command.png){: style=width:75% }
 {: .text-center }
 
-## Pushing our Image
+## Толкаем наш образ
 
-1. In the command line, try running the push command you see on Docker Hub. Note that your command
-   will be using your namespace, not "docker".
+1. В командной строке попробуйте запустить команду push, которую вы видите 
+в Docker Hub. Обратите внимание, что ваша команда будет использовать ваше 
+пространство имен, а не "docker". 
 
     ```plaintext
     $ docker push docker/getting-started
@@ -31,63 +32,65 @@ an example command that you will need to run to push to this repo.
     An image does not exist locally with the tag: docker/getting-started
     ```
 
-    Why did it fail? The push command was looking for an image named docker/getting-started, but
-    didn't find one. If you run `docker image ls`, you won't see one either.
+    Почему это не удалось? Команда `push` искала образ с именем `docker/getting-started`, но не нашла его. 
+    Если вы запустите `docker image ls`, вы тоже его не увидите.
 
-    To fix this, we need to "tag" our existing image we've built to give it another name.
+    Чтобы это исправить, нам нужно "пометить" ("tag") наш существующий образ, который мы создали, чтобы дать ему другое имя.
 
-1. Login to Docker Hub by either clicking on the "Sign In" button in Docker Desktop or using the 
-   command `docker login -u YOUR-USER-NAME`.
+1. Войдите в Docker Hub, нажав кнопку "Sign In" в Docker Desktop или используя команду `docker login -u YOUR-USER-NAME`.
 
-1. Use the `docker tag` command to give the `getting-started` image a new name. Be sure to swap out
-   `YOUR-USER-NAME` with your Docker ID.
+1. Используйте команду `docker tag`, чтобы присвоить образу `getting-started` новое имя. 
+Обязательно замените `YOUR-USER-NAME` на свой идентификатор Docker (Docker ID).
 
     ```bash
     docker tag getting-started YOUR-USER-NAME/getting-started
     ```
 
-1. Now try your push command again. If you're copying the value from Docker Hub, you can drop the 
-   `tagname` portion, as we didn't add a tag to the image name. If you don't specify a tag, Docker
-   will use a tag called `latest`.
+1. Теперь повторите команду push. Если вы копируете значение из Docker Hub, вы можете удалить часть `tagname`, 
+поскольку мы не добавляли тег к имени образа. Если вы не укажете тег, Docker будет использовать тег с именем `latest`.
 
     ```bash
     docker push YOUR-USER-NAME/getting-started
     ```
 
-## Running our Image on a New Instance
+## Запуск нашего образа на новом экземпляре
 
-Now that our image has been built and pushed into a registry, let's try running our app on a brand
-new instance that has never seen this container image! To do this, we will use Play with Docker.
+Теперь, когда наш образ создан и помещен в реестр, давайте попробуем 
+запустить наше приложение на совершенно новом экземпляре, который никогда 
+не видел этот образ контейнера! Для этого мы будем использовать `Play with Docker`. 
 
-1. Open your browser to [Play with Docker](https://labs.play-with-docker.com/).
+1. Откройте в браузере [Play with Docker](https://labs.play-with-docker.com/).
 
-1. Log in with your Docker Hub account.
+1. Войдите в свою учетную запись Docker Hub.
 
-1. Once you're logged in, click on the "+ ADD NEW INSTANCE" link in the left side bar. (If you don't see it, make your browser a little wider.) After a few seconds, a terminal window will be opened in your browser.
+1. После входа в систему нажмите ссылку "+ ADD NEW INSTANCE" на левой боковой панели. 
+(Если вы его не видите, сделайте браузер немного шире.) Через несколько секунд в вашем браузере откроется окно терминала.
 
     ![Play with Docker add new instance](pwd-add-new-instance.png){: style=width:75% }
 {: .text-center }
 
 
-1. In the terminal, start your freshly pushed app.
+1. В терминале запустите только что загруженное приложение.
 
     ```bash
     docker run -dp 3000:3000 YOUR-USER-NAME/getting-started
     ```
 
-    You should see the image get pulled down and eventually start up!
+    Вы должны увидеть, как образ вытягивается (pulled) и в конечном итоге запускается!
 
-1. Click on the 3000 badge when it comes up and you should see the app with your modifications! Hooray!
-    If the 3000 badge doesn't show up, you can click on the "Open Port" button and type in 3000.
+1. Нажмите на значок 3000, когда он появится, и вы увидите приложение со своими изменениями! 
+   Ура! Если значок 3000 не отображается, вы можете нажать кнопку "Open Port" и ввести 3000.
 
-## Recap
+## Резюме
 
-In this section, we learned how to share our images by pushing them to a registry. We then went to a
-brand new instance and were able to run the freshly pushed image. This is quite common in CI pipelines,
-where the pipeline will create the image and push it to a registry and then the production environment
-can use the latest version of the image.
+В этом разделе мы узнали, как делиться нашими образами, помещая их в 
+реестр. Затем мы перешли к совершенно новому экземпляру и смогли запустить 
+только что отправленный образ. Это довольно часто встречается в конвейерах 
+CI, где конвейер создает образ и отправляет его в реестр, а затем 
+производственная среда может использовать последнюю версию образа. 
 
-Now that we have that figured out, let's circle back around to what we noticed at the end of the last
-section. As a reminder, we noticed that when we restarted the app, we lost all of our todo list items.
-That's obviously not a great user experience, so let's learn how we can persist the data across 
-restarts!
+Теперь, когда мы это выяснили, давайте вернемся к тому, что мы заметили в 
+конце последнего раздела. Напоминаем, что мы заметили, что при перезапуске 
+приложения _мы потеряли все элементы списка дел_. 
+Очевидно, что это не лучший пользовательский опыт, поэтому давайте узнаем, 
+как мы можем сохранять данные после перезапуска!

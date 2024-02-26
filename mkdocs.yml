@@ -1,5 +1,5 @@
-site_name: Getting Started
-site_description: Getting Started with Docker
+site_name: Начало работы
+site_description: Начало работы с Docker
 site_author: Docker
 # site_url: https://squidfunk.github.io/mkdocs-material/
 
@@ -9,12 +9,12 @@ repo_url: https://github.com/docker/getting-started
 edit_uri: ""
 
 # Copyright
-copyright: 'Copyright &copy; 2020-2022 Docker'
+copyright: 'Авторские права &copy; 2020-2022 Docker'
 
 # Configuration
 theme:
   name: material
-  language: en
+  language: ru
   palette:
     primary: blue
     accent: blue
@@ -69,13 +69,13 @@ markdown_extensions:
 
 # Page tree
 nav:
-  - Getting Started: tutorial/index.md
-  - Our Application: tutorial/our-application/index.md
-  - Updating our App: tutorial/updating-our-app/index.md
-  - Sharing our App: tutorial/sharing-our-app/index.md
-  - Persisting our DB: tutorial/persisting-our-data/index.md
-  - Using Bind Mounts: tutorial/using-bind-mounts/index.md
-  - Multi-Container Apps: tutorial/multi-container-apps/index.md
-  - Using Docker Compose: tutorial/using-docker-compose/index.md
-  - Image Building Best Practices: tutorial/image-building-best-practices/index.md
-  - What Next?: tutorial/what-next/index.md
+  - Начало работы: tutorial/index.md
+  - Наше приложение: tutorial/our-application/index.md
+  - Обновление нашего приложения: tutorial/updating-our-app/index.md
+  - Поделитесь нашим приложением: tutorial/sharing-our-app/index.md
+  - Сохранение нашей БД: tutorial/persisting-our-data/index.md
+  - Использование Bind Mounts: tutorial/using-bind-mounts/index.md
+  - Мультиконтейнерные приложения: tutorial/multi-container-apps/index.md
+  - Использование Docker Compose: tutorial/using-docker-compose/index.md
+  - Лучшие практики создания образов: tutorial/image-building-best-practices/index.md
+  - Что дальше??: tutorial/what-next/index.md

@@ -1,16 +1,17 @@
-## Security Scanning
+## Сканирование безопасности
 
-When you have built an image, it is good practice to scan it for security vulnerabilities using the `docker scan` command.
-Docker has partnered with [Snyk](http://snyk.io) to provide the vulnerability scanning service.
+После создания образа рекомендуется сканировать его на наличие уязвимостей безопасности с помощью команды `docker scan`.
+Docker заключил партнерское соглашение с [Snyk](http://snyk.io) для предоставления услуги сканирования уязвимостей.
 
-For example, to scan the `getting-started` image you created earlier in the tutorial, you can just type
+Например, чтобы отсканировать образ `getting-started`, который вы создали ранее в этом руководстве, вы можете просто ввести
 
 ```bash
 docker scan getting-started
 ```
 
-The scan uses a constantly updated database of vulnerabilities, so the output you see will vary as new
-vulnerabilities are discovered, but it might look something like this:
+При сканировании используется постоянно обновляемая база данных уязвимостей, 
+поэтому результат, который вы увидите, будет меняться по мере обнаружения новых уязвимостей, 
+но он может выглядеть примерно так:
 
 ```plaintext
 ✗ Low severity vulnerability found in freetype/freetype
@@ -31,30 +32,34 @@ vulnerabilities are discovered, but it might look something like this:
   Fixed in: 2.9.9-r4
 ```
 
-The output lists the type of vulnerability, a URL to learn more, and importantly which version of the relevant library
-fixes the vulnerability.
+В выходных данных указан тип уязвимости, URL-адрес для получения дополнительной информации 
+и, что немаловажно, какая версия соответствующей библиотеки устраняет уязвимость. 
 
-There are several other options, which you can read about in the [docker scan documentation](https://docs.docker.com/engine/scan/).
+Существует несколько других вариантов, о которых вы можете прочитать в [документации по сканированию Docker](https://docs.docker.com/engine/scan/).
 
-As well as scanning your newly built image on the command line, you can also [configure Docker Hub](https://docs.docker.com/docker-hub/vulnerability-scanning/)
-to scan all newly pushed images automatically, and you can then see the results in both Docker Hub and Docker Desktop.
+Помимо сканирования только что созданного образа в командной строке, 
+вы также можете [настроить Docker Hub](https://docs.docker.com/docker-hub/vulnerability-scanning/) для автоматического сканирования всех вновь отправленных образов 
+и затем вы сможете увидеть результаты как в Docker Hub, так и в Docker Desktop.
 
 ![Hub vulnerability scanning](hvs.png){: style=width:75% }
 {: .text-center }
 
-## Image Layering
+## Наложение образов
 
-Did you know that you can look at how an image is composed? Using the `docker image history`
-command, you can see the command that was used to create each layer within an image.
+`Слои образов`, `Многоуровневое представление`
 
-1. Use the `docker image history` command to see the layers in the `getting-started` image you
-   created earlier in the tutorial.
+Знаете ли вы, что можно посмотреть, как создается образ? 
+Используя команду `docker image history` команды, вы можете увидеть 
+команду, которая использовалась для создания каждого слоя в образе.
+
+1. Используйте команду `docker image history`, чтобы просмотреть слои в образе `getting-started`, 
+который вы создали ранее в этом руководстве.
 
     ```bash
     docker image history getting-started
     ```
 
-    You should get output that looks something like this (dates/IDs may be different).
+    Вы должны получить примерно такой результат (даты/идентификаторы могут отличаться).
 
     ```plaintext
     IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
@@ -73,26 +78,24 @@ command, you can see the command that was used to create each layer within an im
     <missing>      11 days ago      /bin/sh -c #(nop) ADD file:57d621536158358b1…   5.29MB 
     ```
 
-    Each line represents a layer in the image. The display here shows the base at the bottom with
-    the newest layer at the top. Using this you can also quickly see the size of each layer, helping to
-    diagnose large images.
+    Каждая строка представляет слой образа. Здесь показано основание внизу и самый новый слой вверху. 
+    Используя это, вы также можете быстро увидеть размер каждого слоя, что помогает диагностировать большие образы.
 
-1. You'll notice that several of the lines are truncated. If you add the `--no-trunc` flag, you'll get the
-   full output (yes... funny how you use a truncated flag to get untruncated output, huh?)
+1. Вы заметите, что некоторые строки обрезаны. Если вы добавите флаг `--no-trunc`, вы получите полный вывод 
 
     ```bash
     docker image history --no-trunc getting-started
     ```
 
+## Кэширование слоев
 
-## Layer Caching
+Теперь, когда вы увидели многоуровневое представление в действии, 
+необходимо усвоить важный урок, который поможет сократить время сборки 
+образов контейнеров. 
 
-Now that you've seen the layering in action, there's an important lesson to learn to help decrease build
-times for your container images.
+> После изменения слоя все последующие слои также необходимо создать заново.
 
-> Once a layer changes, all downstream layers have to be recreated as well
-
-Let's look at the Dockerfile we were using one more time...
+Давайте еще раз посмотрим на Dockerfile, который мы использовали...
 
 ```dockerfile
 FROM node:18-alpine
@@ -102,16 +105,16 @@ RUN yarn install --production
 CMD ["node", "src/index.js"]
 ```
 
-Going back to the image history output, we see that each command in the Dockerfile becomes a new layer in the image.
-You might remember that when we made a change to the image, the yarn dependencies had to be reinstalled. Is there a
-way to fix this? It doesn't make much sense to ship around the same dependencies every time we build, right?
+Возвращаясь к выводу истории образа, мы видим, что каждая команда в Dockerfile становится новым слоем образа.
+Возможно, вы помните, что когда мы вносили изменения в образ, `yarn`-зависимости пришлось переустанавливать. 
+Есть ли способ это исправить? Нет особого смысла использовать одни и те же зависимости каждый раз при сборке, не так ли? 
 
-To fix this, we need to restructure our Dockerfile to help support the caching of the dependencies. For Node-based
-applications, those dependencies are defined in the `package.json` file. So what if we start by copying only that file in first,
-install the dependencies, and _then_ copy in everything else? Then, we only recreate the yarn dependencies if there was
-a change to the `package.json`. Make sense?
+Чтобы это исправить, нам нужно реструктурировать наш Dockerfile, чтобы обеспечить поддержку кэширования зависимостей. 
+Для приложений на базе Node эти зависимости определяются в файле `package.json`. 
+А что, если мы начнем с копирования только этого файла, установим зависимости, а затем _затем_ 
+скопируем все остальное? Затем мы воссоздаем `yarn`-зависимости только в том случае, если в `package.json` были внесены изменения. Имеет смысл?
 
-1. Update the Dockerfile to copy in the `package.json` first, install dependencies, and then copy everything else in.
+1. Обновите файл Dockerfile, чтобы сначала скопировать его в `package.json`, установить зависимости, а затем скопировать все остальное.
 
     ```dockerfile hl_lines="3 4 5"
     FROM node:18-alpine
@@ -122,28 +125,25 @@ a change to the `package.json`. Make sense?
     CMD ["node", "src/index.js"]
     ```
 
-1. Create a file named `.dockerignore` in the same folder as the Dockerfile with the following contents.
+1. Создайте файл с именем `.dockerignore` в той же папке, что и файл Dockerfile, со следующим содержимым.
 
     ```ignore
     node_modules
     ```
 
-    `.dockerignore` files are an easy way to selectively copy only image relevant files.
-    You can read more about this
-    [here](https://docs.docker.com/engine/reference/builder/#dockerignore-file).
-    In this case, the `node_modules` folder should be omitted in the second `COPY` step because otherwise
-    it would possibly overwrite files which were created by the command in the `RUN` step.
-    For further details on why this is recommended for Node.js applications as well as further best practices,
-    have a look at their guide on
-    [Dockerizing a Node.js web app](https://nodejs.org/en/docs/guides/nodejs-docker-webapp/).
+    Файлы `.dockerignore` - это простой способ выборочного копирования только файлов, соответствующих образам. 
+    Вы можете прочитать больше об этом [здесь](https://docs.docker.com/engine/reference/builder/#dockerignore-file).
+    В этом случае папку `node_modules` следует опустить на втором этапе `COPY`, поскольку в противном случае она может перезаписать файлы, созданные командой на этапе `RUN`.
+    Для получения дополнительной информации о том, почему это рекомендуется для приложений Node.js, 
+    а также о дальнейших передовых практиках, ознакомьтесь с их руководством по [Докеризация веб-приложения Node.js](https://nodejs.org/en/docs/guides/nodejs-docker-webapp/).
 
-1. Build a new image using `docker build`.
+1. Создайте новый образ, используя `docker build`.
 
     ```bash
     docker build -t getting-started .
     ```
 
-    You should see output like this...
+    Вы должны увидеть такой вывод...
 
     ```plaintext
     [+] Building 16.1s (10/10) FINISHED
@@ -165,11 +165,12 @@ a change to the `package.json`. Make sense?
     => => naming to docker.io/library/getting-started                                                 0.0s
     ```
 
-    You'll see that all layers were rebuilt. Perfectly fine since we changed the Dockerfile quite a bit.
+    Вы увидите, что все слои были перестроены. Прекрасно, поскольку мы немного изменили Dockerfile.
+  
+1. Теперь внесите изменения в файл `src/static/index.html` (например, измените `<title>` на "The Awesome Todo App").
 
-1. Now, make a change to the `src/static/index.html` file (like change the `<title>` to say "The Awesome Todo App").
-
-1. Build the Docker image now using `docker build -t getting-started .` again. This time, your output should look a little different.
+1. Теперь создайте образ Docker, снова используя `docker build -t getting-started .`. 
+На этот раз ваш результат должен выглядеть немного иначе.
 
     ```plaintext hl_lines="10 11 12"
     [+] Building 1.2s (10/10) FINISHED
@@ -191,24 +192,24 @@ a change to the `package.json`. Make sense?
     => => naming to docker.io/library/getting-started                                                 0.0s
     ```
 
-    First off, you should notice that the build was MUCH faster! You'll see that several steps are using
-    previously cached layers. So, hooray! We're using the build cache. Pushing and pulling this image and updates to it
-    will be much faster as well. Hooray!
+    Во-первых, вы должны заметить, что сборка прошла НАМНОГО быстрее! Вы увидите, что в нескольких шагах используются ранее кэшированные слои. 
+    Итак, ура! Мы используем кэш сборки. Передача и извлечение этого образа и его обновлений также будет происходить намного быстрее. Ура!
 
+## Многоэтапные сборки
 
-## Multi-Stage Builds
+Хотя мы не собираемся слишком углубляться в это в этом уроке, многоэтапные 
+сборки - это невероятно мощный инструмент, который помогает нам 
+использовать несколько этапов для создания образа. Они предлагают ряд 
+преимуществ, в том числе: 
 
-While we're not going to dive into it too much in this tutorial, multi-stage builds are an incredibly powerful
-tool which help us by using multiple stages to create an image. They offer several advantages including:
+- Отделение зависимостей времени сборки от зависимостей времени выполнения.
+- Уменьшите общий размер образа, поставляя _только_ то, что необходимо для запуска вашего приложения.
 
-- Separate build-time dependencies from runtime dependencies
-- Reduce overall image size by shipping _only_ what your app needs to run
+### Пример Maven/Tomcat
 
-### Maven/Tomcat Example
-
-When building Java-based applications, a JDK is needed to compile the source code to Java bytecode. However,
-that JDK isn't needed in production. You might also be using tools such as Maven or Gradle to help build the app.
-Those also aren't needed in our final image. Multi-stage builds help.
+При создании приложений на основе Java необходима JDK для компиляции исходного кода в байт-код Java. 
+Однако этот JDK не нужен в производстве. Вы также можете использовать такие инструменты, как Maven или Gradle, для создания приложения. 
+Они также не нужны в нашем окончательном образе. Многоэтапные сборки помогают. 
 
 ```dockerfile
 FROM maven AS build
@@ -220,9 +221,9 @@ FROM tomcat
 COPY --from=build /app/target/file.war /usr/local/tomcat/webapps 
 ```
 
-In this example, we use one stage (called `build`) to perform the actual Java build with Maven. In the second
-stage (starting at `FROM tomcat`), we copy in files from the `build` stage. The final image is only the last stage
-being created (which can be overridden using the `--target` flag).
+В этом примере мы используем один этап (называемый `build`) для выполнения фактической сборки Java с помощью Maven. 
+На втором этапе (начиная с `FROM tomcat`) мы копируем файлы с этапа `build`. 
+Окончательный образ - это только последний создаваемый этап (который можно переопределить с помощью флага `--target`).
 
 
 ### React Example
@@ -230,6 +231,12 @@ being created (which can be overridden using the `--target` flag).
 When building React applications, we need a Node environment to compile the JS code (typically JSX), SASS stylesheets,
 and more into static HTML, JS, and CSS. Although if we aren't performing server-side rendering, we don't even need a Node environment
 for our production build. Why not ship the static resources in a static nginx container?
+
+### Пример React
+
+При создании приложений React нам нужна среда Node для компиляции кода JS (обычно JSX), таблиц стилей SASS и т.д. в статический HTML, JS и CSS. 
+Хотя, если мы не выполняем рендеринг на стороне сервера, нам даже не понадобится среда Node для нашей производственной сборки. 
+Почему бы не отправить статические ресурсы в статический контейнер nginx?
 
 ```dockerfile
 FROM node:18 AS build
@@ -244,13 +251,12 @@ FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
 ```
 
-Here, we are using a `node:18` image to perform the build (maximizing layer caching) and then copying the output
-into an nginx container. Cool, huh?
+Здесь мы используем образ `node:18` для выполнения сборки (максимальное кэширование слоев), 
+а затем копируем выходные данные в контейнер nginx. Круто, да?
 
+## Резюме
 
-## Recap
-
-By understanding a little bit about how images are structured, we can build images faster and ship fewer changes.
-Scanning images gives us confidence that the containers we are running and distributing are secure.
-Multi-stage builds also help us reduce overall image size and increase final container security by separating
-build-time dependencies from runtime dependencies.
+Немного поняв, как структурированы образы, мы сможем создавать образы быстрее и вносить меньше изменений. 
+Сканирование образов дает нам уверенность в том, что контейнеры, которые мы запускаем и распространяем, безопасны. 
+Многоэтапные сборки также помогают нам уменьшить общий размер образа и повысить безопасность конечного контейнера 
+за счет отделения зависимостей времени сборки от зависимостей времени выполнения.

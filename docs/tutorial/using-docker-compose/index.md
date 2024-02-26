@@ -1,38 +1,35 @@
 
-[Docker Compose](https://docs.docker.com/compose/) is a tool that was developed to help define and
-share multi-container applications. With Compose, we can create a YAML file to define the services
-and with a single command, can spin everything up or tear it all down. 
+[Docker Compose](https://docs.docker.com/compose/) - это инструмент, разработанный для определения и совместного использования многоконтейнерных приложений. 
+С помощью Compose мы можем создать файл YAML для определения сервисов и с помощью одной команды все раскрутить или разрушить. 
 
-The _big_ advantage of using Compose is you can define your application stack in a file, keep it at the root of
-your project repo (it's now version controlled), and easily enable someone else to contribute to your project. 
-Someone would only need to clone your repo and start the compose app. In fact, you might see quite a few projects
-on GitHub/GitLab doing exactly this now.
+_Большим_ преимуществом использования Compose является то, что вы можете определить стек вашего приложения в файле, 
+хранить его в корне репозитория вашего проекта (теперь он контролируется версиями) и легко позволить кому-то другому внести свой вклад в ваш проект. 
+Кому-то нужно будет только клонировать ваш репозиторий и запустить приложение для создания сообщений. 
+Фактически, вы можете увидеть довольно много проектов на GitHub/GitLab, которые сейчас делают именно это.
 
-So, how do we get started?
+Итак, как нам начать?
 
-## Installing Docker Compose
+## Установка Docker Compose
 
-If you installed Docker Desktop for Windows, Mac, or Linux you already have Docker Compose!
-Play-with-Docker instances already have Docker Compose installed as well. If you are on
-another system, you can install Docker Compose using [the instructions here](https://docs.docker.com/compose/install/). 
+Если вы установили Docker Desktop для Windows, Mac или Linux, у вас уже есть Docker Compose!
+В экземплярах Play-with-Docker уже установлен Docker Compose. Если вы 
+использует другую систему, вы можете установить Docker Compose, используя [эти инструкции](https://docs.docker.com/compose/install/).
 
+## Создание нашего файла Compose
 
-## Creating our Compose File
+1. Внутри папки приложения создайте файл с именем `docker-compose.yml` (рядом с файлами `Dockerfile` и `package.json`).
 
-1. Inside of the app folder, create a file named `docker-compose.yml` (next to the `Dockerfile` and `package.json` files).
-
-1. In the compose file, we'll start off by defining a list of services (or containers) we want to run as part of our application.
+1. В файле компоновки мы начнем с определения списка сервисов (или контейнеров), которые мы хотим запускать как часть нашего приложения.
 
     ```yaml
     services:
     ```
 
-And now, we'll start migrating a service at a time into the compose file.
+А теперь мы начнем поочередно переносить сервисы в файл компоновки.
 
+## Определение службы приложений
 
-## Defining the App Service
-
-To remember, this was the command we were using to define our app container.
+Напомним, что эту команду мы использовали для определения контейнера нашего приложения.
 
 ```bash
 docker run -dp 3000:3000 \
@@ -46,8 +43,8 @@ docker run -dp 3000:3000 \
   sh -c "yarn install && yarn run dev"
 ```
 
-1. First, let's define the service entry and the image for the container. We can pick any name for the service. 
-   The name will automatically become a network alias, which will be useful when defining our MySQL service.
+1. Сначала давайте определим вход в службы и образ для контейнера. Мы можем выбрать любое имя для сервиса.
+    Имя автоматически станет псевдонимом сети, что будет полезно при определении нашей службы MySQL.
 
     ```yaml hl_lines="2 3"
     services:
@@ -55,8 +52,8 @@ docker run -dp 3000:3000 \
         image: node:18-alpine
     ```
 
-1. Typically, you will see the command close to the `image` definition, although there is no requirement on ordering.
-   So, let's go ahead and move that into our file.
+1. Обычно вы увидите команду, близкую к определению `image`, хотя порядок расположения не требуется. 
+   Итак, давайте продолжим и переместим это в наш файл.
 
     ```yaml hl_lines="4"
     services:
@@ -65,10 +62,9 @@ docker run -dp 3000:3000 \
         command: sh -c "yarn install && yarn run dev"
     ```
 
-
-1. Let's migrate the `-p 3000:3000` part of the command by defining the `ports` for the service. We will use the
-   [short syntax](https://docs.docker.com/compose/compose-file/#short-syntax-2) here, but there is also a more verbose 
-   [long syntax](https://docs.docker.com/compose/compose-file/#long-syntax-2) available as well.
+1. Давайте перенесем часть команды `-p 3000:3000`, определив `ports` для службы. 
+Здесь мы будем использовать [короткий](https://docs.docker.com/compose/compose-file/#short-syntax-2) синтаксис, 
+но есть и более подробный [длинный](https://docs.docker.com/compose/compose-file/#long-syntax-2) синтаксис также доступен.
 
     ```yaml hl_lines="5 6"
     services:
@@ -79,10 +75,11 @@ docker run -dp 3000:3000 \
           - 3000:3000
     ```
 
-1. Next, we'll migrate both the working directory (`-w /app`) and the volume mapping (`-v "$(pwd):/app"`) by using
-   the `working_dir` and `volumes` definitions. Volumes also has a [short](https://docs.docker.com/compose/compose-file/#short-syntax-4) and [long](https://docs.docker.com/compose/compose-file/#long-syntax-4) syntax.
+1. Далее мы перенесем как рабочий каталог (`-w /app`), так и сопоставление томов (`-v "$(pwd):/app"`), используя определения `working_dir` и `volumes`.
+   Тома (Volumes) также имеет [короткий](https://docs.docker.com/compose/compose-file/#short-syntax-4) 
+   и [длинный](https://docs.docker.com/compose/compose-file/#long-syntax-4) синтаксис.
 
-    One advantage of Docker Compose volume definitions is we can use relative paths from the current directory.
+    Одним из преимуществ определений томов Docker Compose является то, что мы можем использовать относительные пути из текущего каталога.
 
     ```yaml hl_lines="7 8 9"
     services:
@@ -96,7 +93,7 @@ docker run -dp 3000:3000 \
           - ./:/app
     ```
 
-1. Finally, we need to migrate the environment variable definitions using the `environment` key.
+1. Наконец, нам нужно перенести определения переменных среды, используя ключ `environment`.
 
     ```yaml hl_lines="10 11 12 13 14"
     services:
@@ -116,9 +113,9 @@ docker run -dp 3000:3000 \
     ```
 
   
-### Defining the MySQL Service
+### Определение службы MySQL
 
-Now, it's time to define the MySQL service. The command that we used for that container was the following:
+Теперь пришло время определить службу MySQL. Команда, которую мы использовали для этого контейнера, была следующей:
 
 ```bash
 docker run -d \
@@ -129,8 +126,8 @@ docker run -d \
   mysql:8.0
 ```
 
-1. We will first define the new service and name it `mysql` so it automatically gets the network alias. We'll
-   go ahead and specify the image to use as well.
+1. Сначала мы определим новую службу и назовем ее `mysql`, чтобы она автоматически получала сетевой псевдоним. 
+Мы также продолжим и укажем образ, который будем использовать.
 
     ```yaml hl_lines="4 5"
     services:
@@ -140,10 +137,10 @@ docker run -d \
         image: mysql:8.0
     ```
 
-1. Next, we'll define the volume mapping. When we ran the container with `docker run`, the named volume was created
-   automatically. However, that doesn't happen when running with Compose. We need to define the volume in the top-level
-   `volumes:` section and then specify the mountpoint in the service config. By simply providing only the volume name,
-   the default options are used. There are [many more options available](https://docs.docker.com/compose/compose-file/#volumes-top-level-element) though.
+1. Далее мы определим сопоставление томов. Когда мы запустили контейнер с помощью `docker run`, именованный том был создан автоматически. 
+Однако этого не происходит при работе с Compose. Нам нужно определить том в разделе `volumes:` верхнего уровня, а затем указать точку монтирования в конфигурации службы. 
+Если просто указать только имя тома, будут использоваться параметры по умолчанию. 
+Однако есть [доступно гораздо больше вариантов](https://docs.docker.com/compose/compose-file/#volumes-top-level-element).
 
     ```yaml hl_lines="6 7 8 9 10"
     services:
@@ -158,7 +155,7 @@ docker run -d \
       todo-mysql-data:
     ```
 
-1. Finally, we only need to specify the environment variables.
+1. Наконец, нам нужно указать только переменные среды.
 
     ```yaml hl_lines="8 9 10"
     services:
@@ -176,8 +173,7 @@ docker run -d \
       todo-mysql-data:
     ```
 
-At this point, our complete `docker-compose.yml` should look like this:
-
+На этом этапе наш полный файл `docker-compose.yml` должен выглядеть так:
 
 ```yaml
 services:
@@ -207,21 +203,20 @@ volumes:
   todo-mysql-data:
 ```
 
+## Запуск нашего стека приложений
 
-## Running our Application Stack
+Теперь, когда у нас есть файл `docker-compose.yml`, мы можем его запустить!
 
-Now that we have our `docker-compose.yml` file, we can start it up!
+1. Убедитесь, что другие копии приложения/базы данных не запущены (`docker ps` и `docker rm -f <ids>`).
 
-1. Make sure no other copies of the app/db are running first (`docker ps` and `docker rm -f <ids>`).
-
-1. Start up the application stack using the `docker compose up` command. We'll add the `-d` flag to run everything in the
-   background.
+1. Запустите стек приложения с помощью команды `docker compose up`. 
+   Мы добавим флаг `-d`, чтобы все запускалось в фоновом режиме.
 
     ```bash
     docker compose up -d
     ```
 
-    When we run this, we should see output like this:
+    Когда мы запустим это, мы должны увидеть такой вывод:
 
     ```plaintext
     [+] Running 3/3
@@ -230,14 +225,15 @@ Now that we have our `docker-compose.yml` file, we can start it up!
     ⠿ Container app-app-1    Started                                0.4s
     ```
 
-    You'll notice that the volume was created as well as a network! By default, Docker Compose automatically creates a 
-    network specifically for the application stack (which is why we didn't define one in the compose file).
+    Вы заметите, что том был создан так же, как и сеть! 
+    По умолчанию Docker Compose автоматически создает сеть специально для стека приложений (именно поэтому мы не определили ее в файле Compose).
 
-1. Let's look at the logs using the `docker compose logs -f` command. You'll see the logs from each of the services interleaved
-    into a single stream. This is incredibly useful when you want to watch for timing-related issues. The `-f` flag "follows" the
-    log, so will give you live output as it's generated.
+1. Давайте посмотрим логи с помощью команды `docker compose logs -f`. 
+Вы увидите журналы каждой службы, чередующиеся в один поток. Это невероятно 
+полезно, если вы хотите следить за проблемами, связанными со временем. 
+Флаг `-f` "следует" за журналом, поэтому выдает вам живую информацию по мере его создания. 
 
-    If you don't already, you'll see output that looks like this...
+    Если вы еще этого не сделали, вы увидите вывод, который выглядит следующим образом...
 
     ```plaintext
     mysql_1  | 2022-11-23T04:01:20.185015Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.31'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
@@ -245,54 +241,64 @@ Now that we have our `docker-compose.yml` file, we can start it up!
     app_1    | Listening on port 3000
     ```
 
-    The service name is displayed at the beginning of the line (often colored) to help distinguish messages. If you want to
-    view the logs for a specific service, you can add the service name to the end of the logs command (for example,
-    `docker compose logs -f app`).
+    Имя службы отображается в начале строки (часто цветной), чтобы помочь различать сообщения. 
+    Если вы хотите просмотреть журналы определенной службы, вы можете добавить имя службы в конец команды журналов 
+    (например, `docker compose logs -f app`).
 
-    !!! info "Pro tip - Waiting for the DB before starting the app"
-        When the app is starting up, it actually sits and waits for MySQL to be up and ready before trying to connect to it.
-        Docker doesn't have any built-in support to wait for another container to be fully up, running, and ready
-        before starting another container. For Node-based projects, you can use the 
-        [wait-port](https://github.com/dwmkerr/wait-port) dependency. Similar projects exist for other languages/frameworks.
+    !!! info "Совет профессионала - Ожидание БД перед запуском приложения"
+        Когда приложение запускается, оно фактически сидит и ждет, пока MySQL заработает и будет готов, прежде чем пытаться подключиться к нему.
+        В Docker нет встроенной поддержки, позволяющей дождаться полной загрузки, запуска и готовности другого контейнера, прежде чем запускать другой контейнер. 
+        Для проектов на основе Node вы можете использовать зависимость [wait-port](https://github.com/dwmkerr/wait-port). 
+        Подобные проекты существуют и для других языков/фреймворков.
 
-1. At this point, you should be able to open your app and see it running. And hey! We're down to a single command!
+1. На этом этапе вы сможете открыть свое приложение и увидеть, как оно работает. И эй! У нас осталась одна команда!
 
-## Seeing our App Stack in Docker Dashboard
+## Просмотр нашего стека приложений на панели управления Docker
 
 If we look at the Docker Dashboard, we'll see that there is a group named **app**. This is the "project name" from Docker
 Compose and used to group the containers together. By default, the project name is simply the name of the directory that the
 `docker-compose.yml` was located in.
 
+Если мы посмотрим на панель управления Docker, то увидим, что есть группа с именем **app**. 
+Это "имя проекта" из Docker Compose, которое используется для группировки контейнеров. 
+По умолчанию имя проекта - это просто имя каталога, в котором находился `docker-compose.yml`.
+
 ![Docker Dashboard with app project](dashboard-app-project-collapsed.png)
 
-If you twirl down the app, you will see the two containers we defined in the compose file. The names are also a little
-more descriptive, as they follow the pattern of `<project-name>_<service-name>_<replica-number>`. So, it's very easy to
-quickly see what container is our app and which container is the mysql database.
+Если вы прокрутите приложение вниз, вы увидите два контейнера, которые мы определили в файле компоновки. 
+Имена также немного более информативны, поскольку они следуют шаблону `<project-name>_<service-name>_<replica-number>` (`<имя-проекта>_<имя-службы>_<номер-реплики>`). 
+Таким образом, очень легко быстро увидеть, какой контейнер является нашим приложением, а какой - базой данных mysql.
 
 ![Docker Dashboard with app project expanded](dashboard-app-project-expanded.png)
-
 
 ## Tearing it All Down
 
 When you're ready to tear it all down, simply run `docker compose down` or hit the trash can on the Docker Dashboard 
 for the entire app. The containers will stop and the network will be removed.
 
-!!! warning "Removing Volumes"
-    By default, named volumes in your compose file are NOT removed when running `docker compose down`. If you want to
-    remove the volumes, you will need to add the `--volumes` flag.
+## Сносим все это вниз
 
-    The Docker Dashboard does _not_ remove volumes when you delete the app stack.
+Когда вы будете готовы все это разобрать, просто запустите `docker compose down` или нажмите на корзину на панели управления Docker для всего приложения. 
+Контейнеры остановятся, а сеть будет удалена.
 
-Once torn down, you can switch to another project, run `docker compose up` and be ready to contribute to that project! It really
-doesn't get much simpler than that!
+!!! warning "Удаление томов"
+    По умолчанию именованные тома в вашем файле компоновки НЕ удаляются при запуске `docker compose down`. 
+    Если вы хотите удалить тома, вам нужно будет добавить флаг `--volumes`.
 
+    Панель управления Docker _не_ удаляет тома при удалении стека приложения.
 
-## Recap
+После демонтажа вы можете переключиться на другой проект, запустить `docker compose up` 
+и быть готовым внести свой вклад в этот проект! На самом деле нет ничего проще! 
 
-In this section, we learned about Docker Compose and how it helps us dramatically simplify the defining and
-sharing of multi-service applications. We created a Compose file by translating the commands we were
-using into the appropriate compose format.
+## Резюме
 
-At this point, we're starting to wrap up the tutorial. However, there are a few best practices about
-image building we want to cover, as there is a big issue with the Dockerfile we've been using. So,
-let's take a look!
+В этом разделе мы узнали о Docker Compose и о том, как он помогает нам 
+значительно упростить определение и совместное использование 
+мультисервисных приложений. Мы создали файл Compose, переведя используемые 
+нами команды в соответствующий формат Compose. 
+
+На этом этапе мы начинаем завершать урок. Однако есть несколько 
+рекомендаций по созданию образов, которые мы хотим осветить, поскольку с 
+используемым нами файлом Dockerfile существует большая проблема. 
+
+Итак, давайте посмотрим!

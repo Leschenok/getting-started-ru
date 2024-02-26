@@ -1,133 +1,137 @@
 
-In case you didn't notice, our todo list is being wiped clean every single time
-we launch the container. Why is this? Let's dive into how the container is working.
+Если вы не заметили, наш список задач очищается каждый раз, когда мы 
+запускаем контейнер. Почему это? Давайте углубимся в то, как работает 
+контейнер. 
 
-## The Container's Filesystem
+## Файловая система контейнера
 
-When a container runs, it uses the various layers from an image for its filesystem.
-Each container also gets its own "scratch space" to create/update/remove files. Any
-changes won't be seen in another container, _even if_ they are using the same image.
+Когда контейнер запускается, он использует различные слои образа для своей 
+файловой системы. Каждый контейнер также получает свое собственное 
+"рабочее пространство" ("scratch space") для создания/обновления/удаления файлов. 
+Любые изменения не будут видны в другом контейнере, _даже если_ они используют тот же образ. 
 
-### Seeing this in Practice
+### Увидеть это на практике
 
-To see this in action, we're going to start two containers and create a file in each.
-What you'll see is that the files created in one container aren't available in another.
+Чтобы увидеть это в действии, мы запустим два контейнера и создадим файл в каждом.
+Вы увидите, что файлы, созданные в одном контейнере, недоступны в другом.
 
-1. Start a `ubuntu` container that will create a file named `/data.txt` with a random number
-   between 1 and 10000.
+1. Запустите контейнер `ubuntu` который создаст файл с именем `/data.txt` со случайным номером.
+    от 1 до 10000.
 
     ```bash
     docker run -d ubuntu bash -c "shuf -i 1-10000 -n 1 -o /data.txt && tail -f /dev/null"
     ```
 
-    In case you're curious about the command, we're starting a bash shell and invoking two
-    commands (why we have the `&&`). The first portion picks a single random number and writes
-    it to `/data.txt`. The second command is simply watching a file to keep the container running.
+    Если вам интересно узнать об этой команде, мы запускаем оболочку bash и вызываем 
+    две команды (почему у нас есть `&&`). Первая часть выбирает одно случайное число и записывает его в `/data.txt`. 
+    Вторая команда просто просматривает файл, чтобы контейнер работал.
 
-1. Validate we can see the output by `exec`'ing into the container. To do so, open the Dashboard, find your Ubuntu container, click on the "triple dot" menu to get additional actions, and click on the "Open in terminal" menu item.
+1. Подтвердите, что мы можем видеть выходные данные, введя команду `excec` в контейнере. 
+   Для этого откройте панель мониторинга, найдите свой контейнер Ubuntu, щелкните меню "тройная точка", 
+   чтобы получить дополнительные действия, и выберите пункт меню "Open in terminal".
 
     ![Dashboard open CLI into ubuntu container](dashboard-open-cli-ubuntu.png){: style=width:75% }
 {: .text-center }
 
-    You will see a terminal that is running a shell in the ubuntu container. Run the following command to see the content of the `/data.txt` file. Close this terminal afterwards again.
+    В контейнере Ubuntu вы увидите терминал, на котором запущена оболочка. 
+    Запустите следующую команду, чтобы просмотреть содержимое файла `/data.txt`. После этого снова закройте этот терминал.
 
     ```bash
     cat /data.txt
     ```
 
-    If you prefer the command line you can use the `docker exec` command to do the same. You need to get the
-   container's ID (use `docker ps` to get it) and get the content with the following command.
+    Если вы предпочитаете командную строку, вы можете использовать команду `docker exec`, чтобы сделать то же самое. 
+    Вам нужно получить идентификатор контейнера (для его получения используйте `docker ps`) и получить содержимое с помощью следующей команды.
 
     ```bash
     docker exec <container-id> cat /data.txt
     ```
 
-    You should see a random number!
+    Вы должны увидеть случайное число!
 
-1. Now, let's start another `ubuntu` container (the same image) and we'll see we don't have the same
-   file.
+1. Теперь давайте запустим другой контейнер `ubuntu` (тот же образ) и увидим, что у нас нет того же файла.
 
     ```bash
     docker run -it ubuntu ls /
     ```
 
-    And look! There's no `data.txt` file there! That's because it was written to the scratch space for
-    only the first container.
+    И посмотри! Там нет файла `data.txt`! Это потому, что он был записан в рабочее пространство только для первого контейнера.
 
-1. Go ahead and remove the first container using the `docker rm -f <container-id>` command.
+1. Удалите первый контейнер с помощью команды `docker rm -f <container-id>`.
     ```bash
     docker rm -f <container-id>
     ```
 
-## Container Volumes
+## Тома контейнеров
 
-With the previous experiment, we saw that each container starts from the image definition each time it starts. 
-While containers can create, update, and delete files, those changes are lost when the container is removed 
-and all changes are isolated to that container. With volumes, we can change all of this.
+В предыдущем эксперименте мы увидели, что каждый контейнер каждый раз 
+запускается с определения образа. Хотя контейнеры могут создавать, 
+обновлять и удалять файлы, эти изменения теряются при удалении контейнера, 
+и все изменения изолируются в этом контейнере. С помощью объемов мы можем 
+все это изменить. 
 
-[Volumes](https://docs.docker.com/storage/volumes/) provide the ability to connect specific filesystem paths of 
-the container back to the host machine. If a directory in the container is mounted, changes in that
-directory are also seen on the host machine. If we mount that same directory across container restarts, we'd see
-the same files.
+[Volumes (Тома)](https://docs.docker.com/storage/volumes/) предоставляют возможность 
+подключать определенные пути файловой системы контейнера обратно к 
+хост-компьютеру. Если каталог в контейнере смонтирован, изменения в этом 
+каталоге также видны на хост-компьютере. Если мы смонтируем один и тот же 
+каталог при перезапуске контейнера, мы увидим одни и те же файлы. 
 
-There are two main types of volumes. We will eventually use both, but we will start with **named volumes**.
+Существует два основных типа томов. В конечном итоге мы будем использовать оба, но начнем с **именованных томов** (**named volumes**).
 
-## Persisting our Todo Data
+## Сохранение наших данных задач
 
-By default, the todo app stores its data in a [SQLite Database](https://www.sqlite.org/index.html) at
-`/etc/todos/todo.db`. If you're not familiar with SQLite, no worries! It's simply a relational database in 
-which all of the data is stored in a single file. While this isn't the best for large-scale applications,
-it works for small demos. We'll talk about switching this to a different database engine later.
+По умолчанию приложение todo сохраняет свои данные в [базе данных SQLite](https://www.sqlite.org/index.html) по адресу `/etc/todos/todo.db`. 
+Если вы не знакомы с SQLite, не беспокойтесь! Это просто реляционная база данных в где все данные хранятся в одном файле. 
+Хотя это не лучший вариант для крупномасштабных приложений, он работает для небольших демонстраций. О переключении на другой механизм базы данных мы поговорим позже.
 
-With the database being a single file, if we can persist that file on the host and make it available to the
-next container, it should be able to pick up where the last one left off. By creating a volume and attaching
-(often called "mounting") it to the directory the data is stored in, we can persist the data. As our container 
-writes to the `todo.db` file, it will be persisted to the host in the volume.
+Поскольку база данных представляет собой один файл, и если мы сможем сохранить этот файл на хосте и сделать его доступным для следующего контейнера, 
+он сможет продолжить с того места, где остановился последний. 
+Создав том и прикрепив (часто называемое "монтирование" - "mounting") в каталог, в котором хранятся данные, мы можем сохранить данные. 
+Когда наш контейнер записывает данные в файл `todo.db`, он сохраняется на хосте тома.
 
-As mentioned, we are going to use a **named volume**. Think of a named volume as simply a bucket of data. 
-Docker maintains the physical location on the disk and you only need to remember the name of the volume. 
-Every time you use the volume, Docker will make sure the correct data is provided.
+Как уже упоминалось, мы собираемся использовать **именованный том** (**named volume**). 
+Думайте об именованном томе как о просто наборе данных. Docker сохраняет физическое местоположение на диске, и вам нужно только запомнить имя тома. 
+Каждый раз, когда вы используете том, Docker проверяет, предоставлены ли правильные данные.
 
-1. Create a volume by using the `docker volume create` command.
+1. Создайте том с помощью команды `docker volume create`.
 
     ```bash
     docker volume create todo-db
     ```
 
-1. Stop the todo app container once again in the Dashboard (or with `docker rm -f <container-id>`), as it is still running without using the persistent volume.
+1. Остановите контейнер приложения todo еще раз на панели управления (или с помощью `docker rm -f <container-id>`), так как он все еще работает без использования постоянного тома.
 
-1. Start the todo app container, but add the `-v` flag to specify a volume mount. We will use the named volume and mount
-   it to `/etc/todos`, which will capture all files created at the path.
+1. Запустите контейнер приложения todo, но добавьте флаг `-v`, чтобы указать монтирование тома. 
+Мы будем использовать указанный том и смонтировать его в `/etc/todos`, который будет сохранять все файлы, созданные по этому пути.
 
     ```bash
     docker run -dp 3000:3000 -v todo-db:/etc/todos getting-started
     ```
 
-1. Once the container starts up, open the app and add a few items to your todo list.
+1. Как только контейнер запустится, откройте приложение и добавьте несколько элементов в свой список дел.
 
     ![Items added to todo list](items-added.png){: style="width: 55%; " }
     {: .text-center }
 
-1. Remove the container for the todo app. Use the Dashboard or `docker ps` to get the ID and then `docker rm -f <container-id>` to remove it.
+1. Удалите контейнер приложения todo. Используйте панель управления или `docker ps`, чтобы получить идентификатор, а затем `docker rm -f <container-id>`, чтобы удалить его.
 
-1. Start a new container using the same command from above.
+1. Запустите новый контейнер, используя ту же команду, что и выше.
 
-1. Open the app. You should see your items still in your list!
+1. Откройте приложение. Вы должны видеть, что ваши товары все еще находятся в вашем списке!
 
-1. Go ahead and remove the container when you're done checking out your list.
+1. Удалите контейнер, когда закончите проверять свой список.
 
-Hooray! You've now learned how to persist data!
+Ура! Теперь вы узнали, как сохранять данные!
 
-!!! info "Pro-tip"
-    While named volumes and bind mounts (which we'll talk about in a minute) are the two main types of volumes supported
-    by a default Docker engine installation, there are many volume driver plugins available to support NFS, SFTP, NetApp, 
-    and more! This will be especially important once you start running containers on multiple hosts in a clustered
-    environment with Swarm, Kubernetes, etc.
+!!! info "Совет профессионала"
+    Хотя именованные тома и привязки (bind mounts, о которых мы поговорим через минуту) являются двумя основными типами томов, поддерживаемыми стандартной 
+    установкой движка Docker, существует множество подключаемых модулей драйверов томов для поддержки NFS, SFTP, NetApp и других! 
+    Это будет особенно важно, когда вы начнете запускать контейнеры на нескольких хостах в кластерной среде с Swarm, Kubernetes и т.д.
 
-## Diving into our Volume
+## Погружение в наш том
 
-A lot of people frequently ask "Where is Docker _actually_ storing my data when I use a named volume?" If you want to know, 
-you can use the `docker volume inspect` command.
+Многие люди часто спрашивают: "Где Docker _на самом деле_ хранит мои данные, когда я использую именованный том?" 
+Если вы хотите знать, вы можете использовать команду `docker volume inspect`.
 
 ```bash
 docker volume inspect todo-db
@@ -144,18 +148,19 @@ docker volume inspect todo-db
 ]
 ```
 
-The `Mountpoint` is the actual location on the disk where the data is stored. Note that on most machines, you will
-need to have root access to access this directory from the host. But, that's where it is!
+`Mountpoint` - `Точка монтирования` - это фактическое место на диске, где хранятся данные. 
+Обратите внимание, что на большинстве машин вам потребуется root-доступ для доступа к этому каталогу с хоста. 
+Но вот оно где!
 
-!!! info "Accessing Volume data directly on Docker Desktop"
-    While running in Docker Desktop, the Docker commands are actually running inside a small VM on your machine.
-    If you wanted to look at the actual contents of the Mountpoint directory, you would need to first get inside
-    of the VM.
+!!! info "Доступ к данным тома непосредственно на Docker Desktop"
+    При работе в Docker Desktop команды Docker фактически выполняются внутри небольшой виртуальной машины на вашем компьютере.
+    Если вы хотите просмотреть фактическое содержимое каталога точки монтирования, вам нужно сначала проникнуть внутрь виртуальной машины.
 
-## Recap
+## Резюме
 
-At this point, we have a functioning application that can survive restarts! We can show it off to our investors and
-hope they can catch our vision!
+На данный момент у нас есть работающее приложение, способное пережить перезагрузку! 
+Мы можем продемонстрировать это нашим инвесторам и надеяться, что они поймут наше видение! 
 
-However, we saw earlier that rebuilding images for every change takes quite a bit of time. There's got to be a better
-way to make changes, right? With bind mounts (which we hinted at earlier), there is a better way! Let's take a look at that now!
+Однако ранее мы видели, что восстановление обраазов для каждого изменения занимает довольно много времени. 
+Должен быть лучший способ внести изменения, верно? 
+С привязками (bind mounts, на которые мы намекали ранее) есть лучший способ! Давайте посмотрим на это сейчас!

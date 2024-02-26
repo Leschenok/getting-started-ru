@@ -1,44 +1,42 @@
 
-Up to this point, we have been working with single container apps. But, we now want to add MySQL to the
-application stack. The following question often arises - "Where will MySQL run? Install it in the same
-container or run it separately?" In general, **each container should do one thing and do it well.** A few
-reasons:
+До этого момента мы работали с приложениями с одним контейнером. Но теперь мы хотим добавить MySQL в
+стек приложений. Часто возникает следующий вопрос - "Где будет запускаться MySQL? Установите его в ту же
+контейнер или запускать его отдельно?" В общем, **каждый контейнер должен делать что-то одно, и делать это хорошо.** Несколько
+причины:
 
-- There's a good chance you'd have to scale APIs and front-ends differently than databases.
-- Separate containers let you version and update versions in isolation.
-- While you may use a container for the database locally, you may want to use a managed service
-  for the database in production. You don't want to ship your database engine with your app then.
-- Running multiple processes will require a process manager (the container only starts one process),
-  which adds complexity to container startup/shutdown.
+- Вполне вероятно, что вам придется масштабировать API и интерфейсы иначе, чем базы данных.
+- Отдельные контейнеры позволяют создавать и обновлять версии изолированно.
+- Хотя вы можете использовать контейнер для базы данных локально, вы можете захотеть использовать управляемую службу.
+   для базы данных в производстве. Тогда вы не захотите поставлять ядро базы данных вместе со своим приложением.
+- Для запуска нескольких процессов потребуется менеджер процессов (контейнер запускает только один процесс),
+   что усложняет запуск/завершение работы контейнера.
 
-And there are more reasons. So, we will update our application to work like this:
+И есть еще причины. Итак, мы обновим наше приложение, чтобы оно работало следующим образом:
 
 ![Todo App connected to MySQL container](multi-app-architecture.png)
 {: .text-center }
 
+## Контейнерная сеть
 
-## Container Networking
+Помните, что контейнеры по умолчанию работают изолированно и ничего не знают о других процессах.
+или контейнеры на одной машине. Итак, как нам позволить одному контейнеру взаимодействовать с другим? Ответ
+**сетевое взаимодействие**. Теперь вам не обязательно быть сетевым инженером (ура!). Просто запомните это правило...
 
-Remember that containers, by default, run in isolation and don't know anything about other processes
-or containers on the same machine. So, how do we allow one container to talk to another? The answer is
-**networking**. Now, you don't have to be a network engineer (hooray!). Simply remember this rule...
+> Если два контейнера находятся в одной сети, они могут общаться друг с другом. Если нет, то они не могут.
 
-> If two containers are on the same network, they can talk to each other. If they aren't, they can't.
+## Запуск MySQL
 
+Есть два способа разместить контейнер в сети: 1) назначить его при запуске или 2) подключить существующий контейнер.
+На данный момент мы сначала создадим сеть и подключим контейнер MySQL при запуске.
 
-## Starting MySQL
-
-There are two ways to put a container on a network: 1) Assign it at start or 2) connect an existing container.
-For now, we will create the network first and attach the MySQL container at startup.
-
-1. Create the network.
+1. Создайте сеть.
 
     ```bash
     docker network create todo-app
     ```
 
-1. Start a MySQL container and attach it to the network. We're also going to define a few environment variables that the
-  database will use to initialize the database (see the "Environment Variables" section in the [MySQL Docker Hub listing](https://hub.docker.com/_/mysql/)).
+1. Запустите контейнер MySQL и подключите его к сети. Мы также собираемся определить несколько переменных среды, которые база 
+   данных будет использовать для инициализации базы данных (см. раздел "Переменные среды" в [MySQL Docker Hub listing](https://hub.docker.com/_/mysql/)). 
 
     ```bash
     docker run -d \
@@ -49,7 +47,7 @@ For now, we will create the network first and attach the MySQL container at star
         mysql:8.0
     ```
 
-    If you are using PowerShell then use this command.
+    Если вы используете PowerShell, используйте эту команду.
 
     ```powershell
     docker run -d `
@@ -60,27 +58,26 @@ For now, we will create the network first and attach the MySQL container at star
         mysql:8.0
     ```
 
-    You'll also see we specified the `--network-alias` flag. We'll come back to that in just a moment.
+    Вы также увидите, что мы указали флаг `--network-alias`. Мы вернемся к этому через мгновение.
 
-    !!! info "Pro-tip"
-        You'll notice we're using a volume named `todo-mysql-data` here and mounting it at `/var/lib/mysql`, which is
-        where MySQL stores its data. However, we never ran a `docker volume create` command. Docker recognizes we want
-        to use a named volume and creates one automatically for us.
+!!! info "Совет профессионала"
+        Вы заметите, что здесь мы используем том с именем `todo-mysql-data` и монтируем его в `/var/lib/mysql`,
+        где MySQL хранит свои данные. Однако мы никогда не запускали команду `docker volume create`. Docker понимает, что мы хотим
+        использовать именованный том и автоматически создает его для нас.
 
-1. To confirm we have the database up and running, connect to the database and verify it connects.
+1. Чтобы убедиться, что база данных запущена и работает, подключитесь к базе данных и убедитесь, что она подключается.
 
     ```bash
     docker exec -it <mysql-container-id> mysql -p
     ```
 
-    When the password prompt comes up, type in **secret**. In the MySQL shell, list the databases and verify
-    you see the `todos` database.
+    Когда появится запрос пароля, введите **secret**. В оболочке MySQL перечислите базы данных и проверьте вы видите базу данных `todos`.
 
     ```cli
     mysql> SHOW DATABASES;
     ```
 
-    You should see output that looks like this:
+    Вы должны увидеть вывод, который выглядит так:
 
     ```plaintext
     +--------------------+
@@ -95,34 +92,32 @@ For now, we will create the network first and attach the MySQL container at star
     5 rows in set (0.00 sec)
     ```
 
-    Hooray! We have our `todos` database and it's ready for us to use!
+    Ура! У нас есть база данных `todos`, и она готова к использованию!
 
-    To exit the sql terminal type `exit` in the terminal.
+    Чтобы выйти из терминала sql, введите в терминале `exit`.
 
+## Подключение к MySQL
 
-## Connecting to MySQL
+Теперь, когда мы знаем, что MySQL запущен и работает, давайте воспользуемся им! Но вопрос... как?
+Если мы запустим другой контейнер в той же сети, как нам его найти (помните, что у каждого контейнера есть свой IP-адрес)?
 
-Now that we know MySQL is up and running, let's use it! But, the question is... how? If we run
-another container on the same network, how do we find the container (remember each container has its own IP
-address)?
+Чтобы разобраться в этом, мы воспользуемся контейнером [nicolaka/netshoot](https://github.com/nicolaka/netshoot),
+который поставляется с множеством инструментов, полезных для устранения неполадок или отладки сетевых проблем.
 
-To figure it out, we're going to make use of the [nicolaka/netshoot](https://github.com/nicolaka/netshoot) container,
-which ships with a _lot_ of tools that are useful for troubleshooting or debugging networking issues.
-
-1. Start a new container using the nicolaka/netshoot image. Make sure to connect it to the same network.
+1. Запустите новый контейнер, используя образ `nicolaka/netshoot`. Обязательно подключите его к той же сети.
 
     ```bash
     docker run -it --network todo-app nicolaka/netshoot
     ```
 
-1. Inside the container, we're going to use the `dig` command, which is a useful DNS tool. We're going to look up
-   the IP address for the hostname `mysql`.
+1. Внутри контейнера мы собираемся использовать команду `dig`, которая является полезным инструментом DNS. 
+   Мы собираемся посмотреть IP-адрес для имени хоста `mysql`.
 
     ```bash
     dig mysql
     ```
 
-    And you'll get an output like this...
+    И вы получите такой результат...
 
     ```text
     ; <<>> DiG 9.18.8 <<>> mysql
@@ -143,44 +138,38 @@ which ships with a _lot_ of tools that are useful for troubleshooting or debuggi
     ;; MSG SIZE  rcvd: 44
     ```
 
-    In the "ANSWER SECTION", you will see an `A` record for `mysql` that resolves to `172.23.0.2`
-    (your IP address will most likely have a different value). While `mysql` isn't normally a valid hostname,
-    Docker was able to resolve it to the IP address of the container that had that network alias (remember the
-    `--network-alias` flag we used earlier?).
+    В "ANSWER SECTION" вы увидите запись `A` для `mysql`, которая разрешается как `172.23.0.2`.
+    (ваш IP-адрес, скорее всего, будет иметь другое значение). Хотя `mysql` обычно не является допустимым именем хоста,
+    Docker смог преобразовать его в IP-адрес контейнера, который имел этот сетевой псевдоним (помните флаг `--network-alias`, который мы использовали ранее?).
 
-    What this means is... our app only simply needs to connect to a host named `mysql` and it'll talk to the
-    database! It doesn't get much simpler than that!
+    Это означает, что... нашему приложению достаточно просто подключиться к хосту с именем `mysql`, и оно будет общаться с базой данных! Нет ничего проще!
 
-    When you're done, run `exit` to close out of the container.
+    Когда вы закончите, запустите `exit`, чтобы выйти из контейнера.
 
+## Запуск нашего приложения с MySQL
 
-## Running our App with MySQL
+Приложение todo поддерживает настройку нескольких переменных среды для указания параметров подключения MySQL. Они есть:
 
-The todo app supports the setting of a few environment variables to specify MySQL connection settings. They are:
-
-- `MYSQL_HOST` - the hostname for the running MySQL server
-- `MYSQL_USER` - the username to use for the connection
-- `MYSQL_PASSWORD` - the password to use for the connection
-- `MYSQL_DB` - the database to use once connected
+- `MYSQL_HOST` - имя хоста работающего сервера MySQL;
+- `MYSQL_USER` - имя пользователя, которое будет использоваться для подключения;
+- `MYSQL_PASSWORD` - пароль, используемый для подключения;
+- `MYSQL_DB` - база данных, которая будет использоваться после подключения.
 
 !!! warning Setting Connection Settings via Env Vars
-    While using env vars to set connection settings is generally ok for development, it is **HIGHLY DISCOURAGED**
-    when running applications in production. Diogo Monica, a former lead of security at Docker,
-    [wrote a fantastic blog post](https://diogomonica.com/2017/03/27/why-you-shouldnt-use-env-variables-for-secret-data/)
-    explaining why.
 
-    A more secure mechanism is to use the secret support provided by your container orchestration framework. In most cases,
-    these secrets are mounted as files in the running container. You'll see many apps (including the MySQL image and the todo app)
-    also support env vars with a `_FILE` suffix to point to a file containing the variable.
+    Хотя использование переменных окружения для установки параметров соединения в целом подходит для разработки, это **КРАЙНЕ РАЗОЧАРОВАН** при запуске приложений в производстве.
+    Диого Моника, бывший руководитель отдела безопасности в Docker, [написала потрясающий пост в блоге](https://diogomonica.com/2017/03/27/why-you-shouldnt-use-env-variables-for-secret-data/) объясняя почему.
 
-    As an example, setting the `MYSQL_PASSWORD_FILE` var will cause the app to use the contents of the referenced file
-    as the connection password. Docker doesn't do anything to support these env vars. Your app will need to know to look for
-    the variable and get the file contents.
+    Более безопасный механизм использовать секретную поддержку (the secret support provided), предоставляемую вашей платформой оркестрации контейнеров.
+    В большинстве случаев эти секреты монтируются в виде файлов в работающем контейнере. Вы увидите, что многие приложения (включая образ MySQL и приложение todo) 
+    также поддерживают переменные окружения с суффиксом `_FILE`, указывающим на файл, содержащий переменную.
 
+    Например, установка переменной `MYSQL_PASSWORD_FILE` приведет к тому, что приложение будет использовать содержимое указанного файла в качестве 
+    пароля подключения. Docker ничего не делает для поддержки этих переменных окружения. Ваше приложение должно будет знать, как искать переменную и получать содержимое файла.
 
-With all of that explained, let's start our dev-ready container!
+Объяснив все это,давайте запустим наш готовый к разработке контейнер!
 
-1. We'll specify each of the environment variables above, as well as connect the container to our app network.
+1. Мы укажем каждую из указанных выше переменных среды, а также подключим контейнер к сети нашего приложения.
 
     ```bash hl_lines="3 4 5 6 7"
     docker run -dp 3000:3000 \
@@ -194,7 +183,7 @@ With all of that explained, let's start our dev-ready container!
       sh -c "yarn install && yarn run dev"
     ```
 
-    If you are using PowerShell then use this command.
+    Если вы используете PowerShell, используйте эту команду.
 
     ```powershell hl_lines="3 4 5 6 7"
     docker run -dp 3000:3000 `
@@ -208,8 +197,7 @@ With all of that explained, let's start our dev-ready container!
       sh -c "yarn install && yarn run dev"
     ```
 
-1. If we look at the logs for the container (`docker logs <container-id>`), we should see a message indicating it's
-   using the mysql database.
+1. Если мы посмотрим журналы контейнера (`docker logs <container-id>`), мы должны увидеть сообщение о том, что он использует базу данных mysql.
 
     ```plaintext hl_lines="7"
     # Previous log messages omitted
@@ -223,16 +211,16 @@ With all of that explained, let's start our dev-ready container!
     Listening on port 3000
     ```
 
-1. Open the app in your browser and add a few items to your todo list.
+1. Откройте приложение в браузере и добавьте несколько пунктов в свой список дел.
 
-1. Connect to the mysql database and prove that the items are being written to the database. Remember, the password
-   is **secret**.
+1. Подключитесь к базе данных mysql и убедитесь, что элементы записываются в базу данных. Помните, пароль
+    является **secret**.
 
     ```bash
     docker exec -it <mysql-container-id> mysql -p todos
     ```
 
-    And in the mysql shell, run the following:
+    И в оболочке MySQL выполните следующее:
 
     ```plaintext
     mysql> select * from todo_items;
@@ -244,22 +232,21 @@ With all of that explained, let's start our dev-ready container!
     +--------------------------------------+--------------------+-----------+
     ```
 
-    Obviously, your table will look different because it has your items. But, you should see them stored there!
+    Очевидно, что ваша таблица будет выглядеть иначе, потому что в ней есть ваши предметы. Но вы бы видели, как они там хранятся!
 
-If you take a quick look at the Docker Dashboard, you'll see that we have two app containers running. But, there's
-no real indication that they are grouped together in a single app. We'll see how to make that better shortly!
+Если вы быстро посмотрите на панель управления Docker, вы увидите, что у нас работают два контейнера приложений. 
+Но нет никаких реальных указаний на то, что они сгруппированы в одном приложении. Вскоре мы увидим, как это сделать лучше!
 
 ![Docker Dashboard showing two ungrouped app containers](dashboard-multi-container-app.png)
 
-## Recap
+## Резюме
 
-At this point, we have an application that now stores its data in an external database running in a separate
-container. We learned a little bit about container networking and saw how service discovery can be performed
-using DNS.
+На данный момент у нас есть приложение, которое теперь хранит свои данные во внешней базе данных, работающей в отдельном контейнере. 
+Мы немного узнали о контейнерных сетях и увидели, как можно выполнить обнаружение сервисов с помощью DNS.
 
-But, there's a good chance you are starting to feel a little overwhelmed with everything you need to do to start up
-this application. We have to create a network, start containers, specify all of the environment variables, expose
-ports, and more! That's a lot to remember and it's certainly making things harder to pass along to someone else.
+Но есть большая вероятность, что вы начинаете чувствовать себя немного перегруженным всем, что вам нужно сделать, чтобы запустить это приложение. 
+Нам нужно создать сеть, запустить контейнеры, указать все переменные среды, открыть порты и многое другое! Это нужно помнить, 
+и это, безусловно, затрудняет передачу информации кому-то другому.
 
-In the next section, we'll talk about Docker Compose. With Docker Compose, we can share our application stacks in a
-much easier way and let others spin them up with a single (and simple) command!
+В следующем разделе мы поговорим о Docker Compose. С помощью Docker Compose мы можем гораздо проще делиться стеками наших приложений и 
+позволять другим запускать их с помощью одной (и простой) команды!

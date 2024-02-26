@@ -1,26 +1,28 @@
 
-Although we're done with our workshop, there's still a LOT more to learn about containers!
-We're not going to go deep-dive here, but here are a few other areas to look at next!
+Хотя мы закончили наш мастер-класс, нам еще многое предстоит узнать о 
+контейнерах! Мы не собираемся углубляться в эту тему, но вот еще несколько 
+областей, на которые стоит обратить внимание в дальнейшем! 
 
-## Container Orchestration
+## Оркестрация контейнеров
 
-Running containers in production is tough. You don't want to log into a machine and simply run a
-`docker run` or `docker compose up`. Why not? Well, what happens if the containers die? How do you
-scale across several machines? Container orchestration solves this problem. Tools like Kubernetes,
-Swarm, Nomad, and ECS all help solve this problem, all in slightly different ways.
+Запускать контейнеры в продакшене сложно. Вы не хотите входить в систему и 
+просто запускать `docker run` или `docker compose up`. 
+Почему нет? А что будет, если контейнеры умрут? Как масштабировать работу на нескольких машинах? 
+Оркестровка контейнеров решает эту проблему. 
+Такие инструменты, как Kubernetes, Swarm, Nomad и ECS, помогают решить эту проблему, но 
+немного по-разному.
 
-The general idea is that you have "managers" who receive **expected state**. This state might be
-"I want to run two instances of my web app and expose port 80." The managers then look at all of the
-machines in the cluster and delegate work to "worker" nodes. The managers watch for changes (such as
-a container quitting) and then work to make **actual state** reflect the expected state.
+Общая идея состоит в том, что у вас есть "менеджеры", которые получают **ожидаемое состояние** (expected state). 
+Это состояние может быть таким: "Я хочу запустить два экземпляра моего веб-приложения и открыть порт 80". 
+Затем менеджеры рассматривают все машинам в кластере и делегировать работу "рабочим" узлам. 
+Менеджеры отслеживают изменения (например, выход из контейнера), а затем работают над тем, чтобы **фактическое состояние** (actual state) отражало ожидаемое состояние.
 
+## Проекты Cloud Native Computing Foundation
 
-## Cloud Native Computing Foundation Projects
+CNCF - это независимое от поставщиков место для различных проектов с открытым исходным кодом, включая Kubernetes, Prometheus, Envoy, Linkerd, NATS и других! 
+Вы можете просмотреть [законченные и инкубированные проекты здесь](https://www.cncf.io/projects/) 
+и весь [Ландшафт CNCF здесь](https://landscape.cncf.io/). 
+Существует МНОГО проектов, которые помогут решить проблемы, связанные с мониторингом, ведением журналов, безопасностью, реестрами образов, обменом сообщениями и многим другим!
 
-The CNCF is a vendor-neutral home for various open-source projects, including Kubernetes, Prometheus, 
-Envoy, Linkerd, NATS, and more! You can view the [graduated and incubated projects here](https://www.cncf.io/projects/)
-and the entire [CNCF Landscape here](https://landscape.cncf.io/). There are a LOT of projects to help
-solve problems around monitoring, logging, security, image registries, messaging, and more!
-
-So, if you're new to the container landscape and cloud-native application development, welcome! Please
-connect to the community, ask questions, and keep learning! We're excited to have you!
+Итак, если вы новичок в контейнерной сфере и разработке облачных приложений, добро пожаловать! 
+Пожалуйста, присоединяйтесь к сообществу, задавайте вопросы и продолжайте учиться! Мы рады видеть вас!

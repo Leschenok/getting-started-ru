@@ -1,44 +1,49 @@
-# Docker Getting Started Tutorial
+# Учебное пособие по началу работы с Docker
 
-This tutorial was written with the intent of helping folks get up and running
-with containers and is designed to work with Docker Desktop. While not going too much 
-into depth, it covers the following topics:
+Это руководство было написано с целью помочь людям начать работу с 
+контейнерами и предназначено для работы с Docker Desktop. Не вдаваясь 
+слишком глубоко, он охватывает следующие темы: 
 
-- Running your first container
-- Building containers
-- Learning what containers are
-- Running and removing containers
-- Using volumes to persist data
-- Using bind mounts to support development
-- Using container networking to support multi-container applications
-- Using Docker Compose to simplify the definition and sharing of applications
-- Using image layer caching to speed up builds and reduce push/pull size
-- Using multi-stage builds to separate build-time and runtime dependencies
+- Запуск вашего первого контейнера
+- Сборка контейнеров
+- Узнайте, что такое контейнеры
+- Запуск и удаление контейнеров
+- Использование томов (volumes) для сохранения данных
+- Использование привязок (bind mounts) для поддержки разработки
+- Использование контейнерной сети для поддержки многоконтейнерных приложений
+- Использование Docker Compose для упрощения определения и совместного использования приложений
+- Использование кэширования слоев образов для ускорения сборки и уменьшения размера push/pull.
+- Использование многоэтапных сборок для разделения зависимостей (dependencies) времени сборки (build-time) и времени выполнения (runtime).
 
-## Getting Started
+## Начало работы
 
-If you wish to run the tutorial, you can use the following command after installing Docker Desktop:
+Если вы хотите запустить руководство, вы можете использовать следующую команду после установки Docker Desktop:
 
 ```bash
 docker run -d -p 80:80 docker/getting-started
 ```
 
-Once it has started, you can open your browser to [http://localhost](http://localhost).
+После его запуска вы можете открыть в браузере адрес [http://localhost](http://localhost).
 
-## Development
+## Разработка
 
-This project has a `docker-compose.yml` file, which will start the mkdocs application on your
-local machine and help you see changes instantly.
+В этом проекте есть файл `docker-compose.yml`, который запустит приложение 
+`mkdocs` на вашем локальном компьютере и поможет вам мгновенно увидеть 
+изменения.
 
 ```bash
 docker compose up
 ```
 
-## Contributing
+## Вклад
 
-If you find typos or other issues with the tutorial, feel free to create a PR and suggest fixes!
+Если вы обнаружите опечатки или другие проблемы в руководстве, не стесняйтесь создавать PR и предлагать исправления!
 
-If you have ideas on how to make the tutorial better or want to suggest adding new content, please open an 
-issue first before working on your idea. While we love input, we want to keep the tutorial scoped to new-comers.
-As such, we may reject ideas for more advanced requests and don't want you to lose any work you might
-have done. So, ask first and we'll gladly hear your thoughts!
+Если у вас есть идеи, как улучшить учебник, или вы хотите предложить 
+добавить новый контент, сначала откройте проблему, прежде чем приступать к 
+работе над своей идеей. Хотя мы любим вводить информацию, мы хотим, чтобы 
+руководство было ориентировано на новичков. 
+
+Таким образом, мы можем отклонить идеи по более сложным запросам и не 
+хотим, чтобы вы потеряли всю проделанную вами работу. Итак, сначала 
+спросите, и мы с радостью выслушаем ваши мысли!

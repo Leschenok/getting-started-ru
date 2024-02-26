@@ -1,48 +1,56 @@
 
-In the previous chapter, we talked about and used a **named volume** to persist the data in our database.
-Named volumes are great if we simply want to store data, as we don't have to worry about _where_ the data
-is stored.
+В предыдущей главе мы говорили о **именованном томе** и использовали его 
+для сохранения данных в нашей базе данных. Именованные тома отлично 
+подходят, если мы просто хотим хранить данные, поскольку нам не нужно 
+беспокоиться о том, _где_ хранятся данные. 
 
-With **bind mounts**, we control the exact mountpoint on the host. We can use this to persist data, but is often
-used to provide additional data into containers. When working on an application, we can use a bind mount to
-mount our source code into the container to let it see code changes, respond, and let us see the changes right
-away.
+С помощью **bind mounts** мы контролируем точную точку монтирования на 
+хосте. Мы можем использовать это для сохранения данных, но часто оно 
+используется для предоставления дополнительных данных в контейнеры. При 
+работе над приложением мы можем использовать привязку для монтирования 
+исходного кода в контейнер, чтобы он мог видеть изменения кода, 
+реагировать и сразу же видеть изменения.
 
-For Node-based applications, [nodemon](https://npmjs.com/package/nodemon) is a great tool to watch for file
-changes and then restart the application. There are equivalent tools in most other languages and frameworks.
+Для приложений на базе Node [nodemon](https://npmjs.com/package/nodemon) - 
+отличный инструмент для отслеживания изменений файлов и последующего 
+перезапуска приложения. Эквивалентные инструменты существуют в большинстве 
+других языков и фреймворков.
 
-## Quick Volume Type Comparisons
+## Быстрое сравнение типов томов
 
-Bind mounts and named volumes are the two main types of volumes that come with the Docker engine. However, additional
-volume drivers are available to support other use cases ([SFTP](https://github.com/vieux/docker-volume-sshfs), [Ceph](https://ceph.com/geen-categorie/getting-started-with-the-docker-rbd-volume-plugin/), [NetApp](https://netappdvp.readthedocs.io/en/stable/), [S3](https://github.com/elementar/docker-s3-volume), and more).
+Привязка монтирования и именованные тома - это два основных типа томов, 
+поставляемых с движком Docker. 
+Однако доступны дополнительные драйверы томов для поддержки других вариантов использования
+([SFTP](https://github.com/vieux/docker-volume-sshfs), [Ceph](https://ceph.com/geen-categorie/getting-started-with-the-docker-rbd-volume-plugin/), 
+[NetApp](https://netappdvp.readthedocs.io/en/stable/), [S3](https://github.com/elementar/docker-s3-volume), и многое другое).
 
-|   | Named Volumes | Bind Mounts |
-| - | ------------- | ----------- |
-| Host Location | Docker chooses | You control |
-| Mount Example (using `-v`) | my-volume:/usr/local/data | /path/to/data:/usr/local/data |
-| Populates new volume with container contents | Yes | No |
-| Supports Volume Drivers | Yes | No |
+||Именованные тома<br/>Named Volumes|Привязка монтирования<br/>Bind Mounts|
+|---|---|---|
+|Местоположение хоста|Выбирает Docker|Вы контролируете|
+|Пример монтирования<br/>(с использованием `-v`)|`my-volume:/usr/local/data`|`/path/to/data:/usr/local/data`|
+|Заполняет новый том содержимым контейнера|Да|Нет|
+|Поддерживает драйверы тома|Да|Нет|
 
 
-## Starting a Dev-Mode Container
+## Запуск контейнера в режиме разработки
 
-To run our container to support a development workflow, we will do the following:
+Чтобы запустить наш контейнер для поддержки рабочего процесса разработки, мы сделаем следующее:
 
-- Mount our source code into the container
-- Install all dependencies, including the "dev" dependencies
-- Start nodemon to watch for filesystem changes
+- Монтируем наш исходный код в контейнер
+- Установите все зависимости, включая зависимости "dev".
+- Запустите nodemon, чтобы следить за изменениями файловой системы.
 
-So, let's do it!
+Итак, давайте сделаем это!
 
-1. Make sure you don't have any of your own `getting-started` containers running (only the tutorial itself should be running).
+1. Убедитесь, что у вас не запущен ни один из ваших собственных контейнеров `getting-started` (должен быть запущен только сам учебник).
 
-1. Also make sure you are in app source code directory, i.e. `/path/to/getting-started/app`. If you aren't, you can `cd` into it, .e.g:
+1. Также убедитесь, что вы находитесь в каталоге исходного кода приложения, т.е. `/path/to/getting-started/app`. Если это не так, вы можете войти в него с помощью `cd`, например:
 
     ```bash
     cd /path/to/getting-started/app
     ```
 
-1. Now that you are in the `getting-started/app` directory, run the following command. We'll explain what's going on afterwards:
+1. Теперь, когда вы находитесь в каталоге `getting-started/app`, выполните следующую команду. Далее мы объясним, что происходит:
 
     ```bash
     docker run -dp 3000:3000 \
@@ -51,7 +59,7 @@ So, let's do it!
         sh -c "yarn install && yarn run dev"
     ```
 
-    If you are using PowerShell then use this command.
+    Если вы используете PowerShell, используйте эту команду.
 
     ```powershell
     docker run -dp 3000:3000 `
@@ -60,15 +68,16 @@ So, let's do it!
         sh -c "yarn install && yarn run dev"
     ```
 
-    - `-dp 3000:3000` - same as before. Run in detached (background) mode and create a port mapping
-    - `-w /app` - sets the container's present working directory where the command will run from
-    - `-v "$(pwd):/app"` - bind mount (link) the host's present `getting-started/app` directory to the container's `/app` directory. Note: Docker requires absolute paths for binding mounts, so in this example we use `pwd` for printing the absolute path of the working directory, i.e. the `app` directory, instead of typing it manually
-    - `node:18-alpine` - the image to use. Note that this is the base image for our app from the Dockerfile
-    - `sh -c "yarn install && yarn run dev"` - the command. We're starting a shell using `sh` (alpine doesn't have `bash`) and
-      running `yarn install` to install _all_ dependencies and then running `yarn run dev`. If we look in the `package.json`,
-      we'll see that the `dev` script is starting `nodemon`.
-
-1. You can watch the logs using `docker logs -f <container-id>`. You'll know you're ready to go when you see this...
+    - `-dp 3000:3000` - то же, что и раньше. Запустите в автономном (фоновом) режиме и создайте сопоставление портов.
+    - `-w /app` - устанавливает текущий рабочий каталог контейнера, из которого будет запускаться команда.
+    - `-v "$(pwd):/app"` - связать монтирование (ссылку) текущего каталога `getting-started/app` хоста с каталогом `/app` контейнера. 
+      Примечание. Docker требует абсолютных путей для монтирования привязки, поэтому в этом примере мы используем `pwd` для печати абсолютного пути к рабочему каталогу, то есть каталогу `app`, вместо того, чтобы вводить его вручную.
+    - `node:18-alpine` - образ, который нужно использовать. Обратите внимание: это базовый образ нашего приложения из Dockerfile.
+    - `sh -c "yarn install && Yarn run dev"` - команда. Мы запускаем оболочку с помощью `sh` (в Alpine нет `bash`) и
+       запустим `yarn install` для установки _всех_ зависимостей, а затем запустим `yarn run dev`. 
+      Если мы посмотрим в `package.json`, мы увидим, что сценарий `dev` запускает `nodemon`.
+  
+1. Вы можете просмотреть журналы, используя `docker logs -f <container-id>`. Вы поймете, что готовы к работе, когда увидите это...
 
     ```bash
     docker logs -f <container-id>
@@ -82,38 +91,45 @@ So, let's do it!
     Listening on port 3000
     ```
 
-    When you're done watching the logs, exit out by hitting `Ctrl`+`C`.
+    Когда вы закончите просмотр журналов, выйдите, нажав `Ctrl`+`C`.
 
 1. Now, let's make a change to the app. In the `src/static/js/app.js` file, let's change the "Add Item" button to simply say
    "Add". This change will be on line 109 - remember to save the file.
+
+1. Теперь внесем изменения в приложение. В файле `src/static/js/app.js` давайте изменим кнопку "Add Item", 
+чтобы просто сказать "Add". Это изменение будет в строке 109 - не забудьте сохранить файл.
 
     ```diff
     -                         {submitting ? 'Adding...' : 'Add Item'}
     +                         {submitting ? 'Adding...' : 'Add'}
     ```
 
-1. Simply refresh the page (or open it) and you should see the change reflected in the browser almost immediately. It might
-   take a few seconds for the Node server to restart, so if you get an error, just try refreshing after a few seconds.
+1. Просто обновите страницу (или откройте ее), и вы почти сразу увидите отражение изменений в браузере. 
+Перезапуск сервера Node может занять несколько секунд, поэтому, если вы получите сообщение об ошибке, просто 
+попробуйте обновить его через несколько секунд.
 
     ![Screenshot of updated label for Add button](updated-add-button.png){: style="width:75%;"}
     {: .text-center }
 
-1. Feel free to make any other changes you'd like to make. When you're done, stop the container and build your new image
-   using `docker build -t getting-started .`.
+1. Не стесняйтесь вносить любые другие изменения, которые захотите. Когда вы закончите, остановите контейнер и создайте новый образ.
+    используя `docker build -t getting-started .`.
 
+Использование привязки монтирования _очень_ распространено при локальной 
+разработке. Преимущество заключается в том, что на машине разработки не 
+обязательно должны быть установлены все инструменты и среды сборки. С 
+помощью одной команды `docker run` среда разработки запускается и готова к 
+работе. Мы поговорим о Docker Compose на следующем этапе, так как это 
+поможет упростить наши команды (мы уже получаем много флагов).
 
-Using bind mounts is _very_ common for local development setups. The advantage is that the dev machine doesn't need to have
-all of the build tools and environments installed. With a single `docker run` command, the dev environment is pulled and ready
-to go. We'll talk about Docker Compose in a future step, as this will help simplify our commands (we're already getting a lot
-of flags).
+## Резюме
 
-## Recap
+На этом этапе мы можем сохранить нашу базу данных и быстро реагировать на нужды и требования наших инвесторов и учредителей. Ура!
+Но знаете что? Мы получили отличные новости!
 
-At this point, we can persist our database and respond rapidly to the needs and demands of our investors and founders. Hooray!
-But, guess what? We received great news!
+**Ваш проект выбран для дальнейшего развития!**
 
-**Your project has been selected for future development!** 
-
-In order to prepare for production, we need to migrate our database from working in SQLite to something that can scale a
-little better. For simplicity, we'll keep with a relational database and switch our application to use MySQL. But, how 
-should we run MySQL? How do we allow the containers to talk to each other? We'll talk about that next!
+Чтобы подготовиться к производству, нам нужно перевести нашу базу данных с 
+работы в SQLite на что-то, что может немного лучше масштабироваться. Для 
+простоты мы продолжим использовать реляционную базу данных и переключим 
+наше приложение на использование MySQL. Но как нам запустить MySQL? Как мы 
+позволяем контейнерам общаться друг с другом? Об этом мы поговорим дальше!

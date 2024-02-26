@@ -2,71 +2,76 @@
 next_page: app.md
 ---
 
-## The command you just ran
+## Команда, которую вы только что выполнили
 
-Congratulations! You have started the container for this tutorial!
-Let's first explain the command that you just ran. In case you forgot,
-here's the command:
+Поздравляем! Вы запустили контейнер для этого урока!
+Давайте сначала объясним команду, которую вы только что выполнили. 
+На случай, если ты забыл, вот команда:
 
 ```cli
 docker run -d -p 80:80 docker/getting-started
 ```
 
-You'll notice a few flags being used. Here's some more info on them:
+Вы заметите, что используются несколько флагов. Вот еще информация о них:
 
-- `-d` - run the container in detached mode (in the background)
-- `-p 80:80` - map port 80 of the host to port 80 in the container
-- `docker/getting-started` - the image to use
+- `-d` - запустить контейнер в отключенном режиме (в фоновом режиме);
+- `-p 80:80` - сопоставить порт 80 хоста с портом 80 в контейнере;
+- `docker/getting-started` - образ, который нужно использовать.
 
-!!! info "Pro tip"
-    You can combine single character flags to shorten the full command.
-    As an example, the command above could be written as:
+!!! info "Совет профессионала"
+    Вы можете комбинировать односимвольные флаги, чтобы сократить полную команду.
+    Например, приведенную выше команду можно записать так:
+
     ```
     docker run -dp 80:80 docker/getting-started
     ```
 
-## The Docker Dashboard
+## Панель управления Docker
 
-Before going any further, we want to highlight the Docker Dashboard, which gives
-you a quick view of the containers running on your machine. It provides you 
-access to container logs, lets you get a shell inside the container, and allows you to easily manage container lifecycle (stop, remove, etc.). 
+Прежде чем идти дальше, мы хотим выделить панель управления Docker (Docker Dashboard), 
+которая дает вам быстрый обзор контейнеров, работающих на вашем 
+компьютере. Она предоставляет вам доступ к журналам контейнера, позволяет 
+получить оболочку внутри контейнера и позволяет легко управлять жизненным 
+циклом контейнера (остановка, удаление и т.д.). 
 
-To access the dashboard, follow the instructions in the 
-[Docker Desktop manual](https://docs.docker.com/desktop/). If you open the dashboard
-now, you will see this tutorial running! The container name (`jolly_bouman` below) is a
-randomly created name. So, you'll most likely have a different name.
+Чтобы получить доступ к панели управления Docker, следуйте инструкциям в 
+[Руководстве по Docker Desktop](https://docs.docker.com/desktop/). Если 
+вы сейчас откроете панель управления, вы увидите, что это руководство 
+работает! Имя контейнера (`jolly_bouman` ниже) - это случайно созданное 
+имя. Так что, скорее всего, у вас будет другое имя.
 
 ![Tutorial container running in Docker Dashboard](tutorial-in-dashboard.png)
 
+## Что такое контейнер?
 
-## What is a container?
+Теперь, когда вы успешно запустили контейнер, давайте спросим себя, что _такое_ контейнер? 
+Проще говоря, контейнер — это еще один процесс на вашем компьютере, изолированный от всех других процессов на хост-компьютере. 
+Эта изоляция использует [kernel namespaces and cgroups](https://medium.com/@saschagrunert/demystifying-containers-part-i-kernel-space-2c53d6979504), 
+функции, которые уже давно присутствуют в Linux. Docker постарался сделать эти возможности доступными и простыми в использовании. 
 
-Now that you've successfully run a container, let's ask ourselves what _is_ a container? Simply put, a container is
-another process on your machine that has been isolated from all other processes
-on the host machine. That isolation leverages [kernel namespaces and cgroups](https://medium.com/@saschagrunert/demystifying-containers-part-i-kernel-space-2c53d6979504), features that have been 
-in Linux for a long time. Docker has worked to make these capabilities approachable and easy to use.
+!!! info "Создание контейнеров с нуля"
 
-!!! info 
-    "Creating Containers from Scratch"
-    If you'd like to see how containers are built from scratch, Liz Rice from Aqua Security
-    has a fantastic talk in which she creates a container from scratch in Go. While she makes
-    a simple container, this talk doesn't go into networking, using images for the filesystem, 
-    and more. But, it gives a _fantastic_ deep dive into how things are working.
+    Если вы хотите увидеть, как создаются контейнеры с нуля, Liz Rice из Aqua Security 
+    проведет фантастическую лекцию, в которой она создает контейнер с нуля в Go. 
+    Хотя она создает простой контейнер, в этом докладе не рассматриваются сети, использование образов для файловой системы и многое другое. 
+    Но это дает _фантастическое_ глубокое погружение в то, как все работает. 
 
     <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/8fi7uSYlOdc" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-## What is a container image?
+## Что такое образ контейнера?
 
-When running a container, it uses an isolated filesystem. This custom filesystem is provided 
-by a **container image**. Since the image contains the container's filesystem, it must include everything 
-needed to run the application - all dependencies, configuration, scripts, binaries, etc. The 
-image also contains other configuration for the container, such as environment variables,
-a default command to run, and other metadata.
+При запуске контейнера он использует изолированную файловую систему. Эта 
+пользовательская файловая система предоставляется **образом контейнера**. 
+Поскольку образ содержит файловую систему контейнера, он должен включать в 
+себя все необходимое для запуска приложения - все зависимости, 
+конфигурации, сценарии, двоичные файлы и т. д. Образ также содержит другую 
+конфигурацию контейнера, например переменные среды, команду для запуска по 
+умолчанию, и другие метаданные. 
 
-We'll dive deeper into images later on, covering topics such as layering, best practices, and more.
+Позже мы углубимся в образы, охватывая такие темы, как наложение слоев, лучшие практики и многое другое.
 
 !!! info
-    If you're familiar with `chroot`, think of a container as an extended version of `chroot`. The
-    filesystem is simply coming from the image whereas a container adds additional isolation that is not
-    available when simply using chroot.
-
+    Если вы знакомы с `chroot`, думайте о контейнере как о расширенной 
+    версии `chroot`. Файловая система просто берется из образа, тогда как 
+    контейнер добавляет дополнительную изоляцию, которая недоступна при 
+    простом использовании `chroot`.
